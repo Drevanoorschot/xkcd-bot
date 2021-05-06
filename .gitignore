@@ -1,0 +1,6 @@
+store.txt
+.idea
+venv/
+config.py
+xkcd-bot.log
+__pycache__/
