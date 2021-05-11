@@ -61,8 +61,7 @@ class CheckerCog(commands.Cog):
         logger.log(logging.INFO, 'all setup and ready to go!')
 
 
-client = discord.Client()
-commandControl = commands.Bot(command_prefix='!xkcd ')
+client = commands.Bot(command_prefix='!xkcd ')
 
 
 @client.event
@@ -86,6 +85,5 @@ async def source(ctx):
 
 CheckerCog(client)
 
-commandControl.add_command(source)
-commandControl.run(config['token'])
+client.add_command(source)
 client.run(config['token'])
