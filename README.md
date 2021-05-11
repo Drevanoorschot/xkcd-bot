@@ -13,4 +13,4 @@ It posts xkcd comics in the *#xkcd* channel of your server when a new comic is r
 Probably smart though to run the main.py in a service or daemon (or a screen if you're cheap).
 
 ## I'm lazy
-That's okay, you can add a live version of the bot by clicking [here](https://discord.com/api/oauth2/authorize?client_id=839927624327495701&permissions=2064&scope=bot).
+That's okay, you can add a live version of the bot to your own server by clicking [here](https://discord.com/api/oauth2/authorize?client_id=839927624327495701&permissions=2064&scope=bot).
