@@ -14,3 +14,10 @@ Probably smart though to run the main.py in a service or daemon (or a screen if 
 
 ## I'm lazy
 That's okay, you can add a live version of the bot to your own server by clicking [here](https://discord.com/api/oauth2/authorize?client_id=839927624327495701&permissions=2064&scope=bot).
+
+## Commands
+command prefix: `!xkcd `
+
+`help` Get command overview and their usage
+
+`source` Get link to the source code of the bot (this page)
