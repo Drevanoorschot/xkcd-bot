@@ -62,6 +62,7 @@ class CheckerCog(commands.Cog):
 
 
 client = discord.Client()
+commandControl = commands.Bot(command_prefix='!xkcd ')
 
 
 @client.event
@@ -78,5 +79,13 @@ async def on_guild_join(server: Guild):
         await server.create_text_channel('xkcd')
 
 
+@commands.command(name='source', help='Get a link to the source code of me')
+async def source(ctx):
+    await ctx.send('You can find my source code on GitHub: https://github.com/Drevanoorschot/xkcd-bot')
+
+
 CheckerCog(client)
+
+commandControl.add_command(source)
+commandControl.run(config['token'])
 client.run(config['token'])
