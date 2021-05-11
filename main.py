@@ -1,8 +1,7 @@
 import io
-import sys
 
 import discord
-from discord import File, Guild
+from discord import File, Guild, Embed
 from discord.ext import commands, tasks
 import requests
 import logging
@@ -10,6 +9,8 @@ import logging
 from config import config
 
 # logging setup
+from post_checker import PostChecker
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('xkcd-bot')
 logger.setLevel(logging.INFO)
@@ -41,48 +42,23 @@ class CheckerCog(commands.Cog):
     async def post_checker_routine(self):
         if self.post_checker.check_new():
             logger.log(logging.INFO, "new post! posting to all servers...")
-            self.post_checker.update_last_and_store()
-            img = io.BytesIO(requests.get(self.post_checker.last_comic_url).content)
-            img_file = File(img, "comic.png")
+            self.post_checker.update_post_to_latest_and_store()
             for server in self.bot.guilds:
                 for channel in server.text_channels:
                     if channel.name == self.post_channel:
                         logger.log(logging.INFO, 'making post in {}'.format(server.name))
-                        await channel.send(file=img_file)
+                        msg = await channel.send(file=self.post_checker.post.make_file(),
+                                                 content='{title} ({link})'.format(
+                                                     title=self.post_checker.post.title,
+                                                     link=self.post_checker.post.link
+                                                 ))
+                        await msg.edit(suppress=True)
 
     @post_checker_routine.before_loop
     async def before_post_checker(self):
         logger.log(logging.INFO, 'waiting for bot to be up...')
         await self.bot.wait_until_ready()
         logger.log(logging.INFO, 'all setup and ready to go!')
-
-
-class PostChecker():
-    def __init__(self):
-        self.last_comic_url = self.get_url_from_store()
-
-    def check_new(self) -> bool:
-        last_comic_url = self._get_comic_url()
-        return last_comic_url != self.last_comic_url
-
-    def update_last_and_store(self):
-        last_comic_url = self._get_comic_url()
-        store = open('store.txt', 'w')
-        store.write(last_comic_url)
-        store.close()
-        self.last_comic_url = last_comic_url
-
-    @staticmethod
-    def get_url_from_store() -> str:
-        store = open('store.txt')
-        last_comic_url = store.readline()
-        store.close()
-        return last_comic_url
-
-    @staticmethod
-    def _get_comic_url() -> str:
-        page = requests.get('https://xkcd.com/').text
-        return page.split('Image URL (for hotlinking/embedding): ')[1].split('<div')[0].replace('\n', '')
 
 
 client = discord.Client()
