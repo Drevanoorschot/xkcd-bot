@@ -1,5 +1,3 @@
-import io
-
 import discord
 from discord import Guild
 from discord.ext import commands, tasks
@@ -20,6 +18,7 @@ file_log_handler = logging.FileHandler(filename='xkcd-bot.log', encoding='utf-8'
 file_log_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(file_log_handler)
 
+
 class CheckerCog(commands.Cog):
     def __init__(self, bot: discord.Client):
         self.index = 0
@@ -32,22 +31,20 @@ class CheckerCog(commands.Cog):
 
     @tasks.loop(minutes=15)
     async def post_checker_routine(self):
-        postCheck = PostCheck()
-        if postCheck.is_new():
-            logger.log(logging.INFO, "new post! posting to all servers...")
-            postCheck.update_store()
-            postCheck.set_image_bytes()
+        post_check = PostCheck()
+        if post_check.is_new():
+            logger.log(logging.INFO, 'new post! posting to all servers...')
+            post_check.update_store()
+            post_check.set_image_bytes()
             for server in self.bot.guilds:
                 for channel in server.text_channels:
                     if channel.name == self.post_channel:
-                        logger.log(logging.INFO, 'making post in {}'.format(server.name))
-                        msg = await channel.send(file=postCheck.create_img_file(),
-                                                 content='{title} ({link})'.format(
-                                                     title=postCheck.title,
-                                                     link=postCheck.link
-                                                 ))
+                        logger.log(logging.INFO, f'making post in {server.name}')
+                        msg = await channel.send(file=post_check.create_img_file(),
+                                                 content=f'{post_check.title} ({post_check.link})'
+                                                 )
                         await msg.edit(suppress=True)
-                        await channel.send(f'_{postCheck.alt}_')
+                        await channel.send(f'_{post_check.alt}_')
 
     @post_checker_routine.before_loop
     async def before_post_checker(self):
@@ -61,12 +58,12 @@ client = commands.Bot(command_prefix='!xkcd ')
 
 @client.event
 async def on_ready():
-    logger.log(logging.INFO, 'We have logged in as {0.user}'.format(client))
+    logger.log(logging.INFO, f'We have logged in as {client.user}')
 
 
 @client.event
 async def on_guild_join(server: Guild):
-    logger.log(logging.INFO, "new Server joined: {}".format(server.name))
+    logger.log(logging.INFO, f'new Server joined: {server.name}')
     text_channels = set(map(lambda x: x.name, server.text_channels))
     if 'xkcd' not in text_channels:
         logger.log(logging.INFO, 'xkcd channel non existent, creating xkcd channel...')
