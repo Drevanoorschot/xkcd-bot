@@ -1,33 +1,33 @@
+import io
+import json
+
 import requests
+from discord import File
 
-from post import NewestPost, Post
 
-
-class PostChecker:
+class PostCheck:
     def __init__(self):
-        self.page = requests.get('https://xkcd.com/').text
-        self.post = NewestPost(self.page, self.get_url_from_store())
+        info = json.loads(requests.get('https://xkcd.com/info.0.json').text)
+        self.num = str(info['num'])
+        self.title = info['title']
+        self.alt = info['alt']
+        self.img_link = info['img']
+        self.link = f'https://xkcd.com/{self.num}/'
+        self.img = None
 
-    def check_new(self) -> bool:
-        self.update_page()
-        link = self._get_comic_url()
-        return link != self.post.link
-
-    def update_post_to_latest_and_store(self):
-        self.post = NewestPost(self.page, self._get_comic_url())
-        store = open('store.txt', 'w')
-        store.write(self.post.link)
-        store.close()
-
-    @staticmethod
-    def get_url_from_store() -> str:
+    def is_new(self) -> bool:
         store = open('store.txt')
-        last_comic_url = store.readline()
+        latest = store.readline()
         store.close()
-        return last_comic_url
+        return latest != self.num
 
-    def _get_comic_url(self) -> str:
-        return self.page.split('Permanent link to this comic: ')[1].split('<br />')[0]
+    def update_store(self):
+        store = open('store.txt', 'w')
+        store.write(self.num)
+        store.close()
 
-    def update_page(self):
-        self.page = requests.get('https://xkcd.com/').text
+    def set_image_bytes(self):
+        self.img = requests.get(self.img_link).content
+
+    def create_img_file(self) -> File:
+        return File(io.BytesIO(self.img), self.title + '.png')

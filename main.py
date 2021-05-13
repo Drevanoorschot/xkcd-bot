@@ -1,15 +1,15 @@
 import io
 
 import discord
-from discord import File, Guild, Embed
+from discord import Guild
 from discord.ext import commands, tasks
-import requests
+
 import logging
 
 from config import config
 
 # logging setup
-from post_checker import PostChecker
+from post_checker import PostCheck
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('xkcd-bot')
@@ -20,19 +20,11 @@ file_log_handler = logging.FileHandler(filename='xkcd-bot.log', encoding='utf-8'
 file_log_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(file_log_handler)
 
-
-# standard output logger
-# print_log_handler = logging.StreamHandler(sys.stdout)
-# print_log_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-# logger.addHandler(print_log_handler)
-
-
 class CheckerCog(commands.Cog):
     def __init__(self, bot: discord.Client):
         self.index = 0
         self.bot = bot
         self.post_channel = 'xkcd'
-        self.post_checker = PostChecker()
         self.post_checker_routine.start()
 
     def cog_unload(self):
@@ -40,19 +32,22 @@ class CheckerCog(commands.Cog):
 
     @tasks.loop(minutes=15)
     async def post_checker_routine(self):
-        if self.post_checker.check_new():
+        postCheck = PostCheck()
+        if postCheck.is_new():
             logger.log(logging.INFO, "new post! posting to all servers...")
-            self.post_checker.update_post_to_latest_and_store()
+            postCheck.update_store()
+            postCheck.set_image_bytes()
             for server in self.bot.guilds:
                 for channel in server.text_channels:
                     if channel.name == self.post_channel:
                         logger.log(logging.INFO, 'making post in {}'.format(server.name))
-                        msg = await channel.send(file=self.post_checker.post.make_file(),
+                        msg = await channel.send(file=postCheck.create_img_file(),
                                                  content='{title} ({link})'.format(
-                                                     title=self.post_checker.post.title,
-                                                     link=self.post_checker.post.link
+                                                     title=postCheck.title,
+                                                     link=postCheck.link
                                                  ))
                         await msg.edit(suppress=True)
+                        await channel.send(f'_{postCheck.alt}_')
 
     @post_checker_routine.before_loop
     async def before_post_checker(self):
